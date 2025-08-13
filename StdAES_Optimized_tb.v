@@ -11,15 +11,10 @@ module StdAES_Optimized_tb;
 
     wire [127:0] Dout;
     wire Kvld, Dvld, BSY;
-    wire [2:0] DEMUX_ADD_00, DEMUX_ADD_01, DEMUX_ADD_02, DEMUX_ADD_03;
-    wire [2:0] DEMUX_ADD_04, DEMUX_ADD_05, DEMUX_ADD_06, DEMUX_ADD_07;
-    wire [2:0] DEMUX_ADD_08, DEMUX_ADD_09, DEMUX_ADD_10, DEMUX_ADD_11;
-    wire [2:0] DEMUX_ADD_12, DEMUX_ADD_13, DEMUX_ADD_14, DEMUX_ADD_15;
-    wire [5:0] RWL_DEC_ADD_00, RWL_DEC_ADD_01, RWL_DEC_ADD_02, RWL_DEC_ADD_03;
-    wire [5:0] RWL_DEC_ADD_04, RWL_DEC_ADD_05, RWL_DEC_ADD_06, RWL_DEC_ADD_07;
-    wire [5:0] RWL_DEC_ADD_08, RWL_DEC_ADD_09, RWL_DEC_ADD_10, RWL_DEC_ADD_11;
-    wire [5:0] RWL_DEC_ADD_12, RWL_DEC_ADD_13, RWL_DEC_ADD_14, RWL_DEC_ADD_15;
+    wire [2:0] DEMUX_ADD [0:15]; 
+    wire [5:0] RWL_DEC_ADD [0:15];
     wire [15:0] IN;
+
 
     StdAES_Optimized dut(
         .CLK(CLK), .RSTn(RSTn), .EN(EN), .Din(Din), .KDrdy(KDrdy),
@@ -28,14 +23,14 @@ module StdAES_Optimized_tb;
         .RIO_08(RIO[8]), .RIO_09(RIO[9]), .RIO_10(RIO[10]), .RIO_11(RIO[11]),
         .RIO_12(RIO[12]), .RIO_13(RIO[13]), .RIO_14(RIO[14]), .RIO_15(RIO[15]),
         .Dout(Dout), .Kvld(Kvld), .Dvld(Dvld), .BSY(BSY),
-        .DEMUX_ADD_00(DEMUX_ADD_00), .DEMUX_ADD_01(DEMUX_ADD_01), .DEMUX_ADD_02(DEMUX_ADD_02), .DEMUX_ADD_03(DEMUX_ADD_03),
-        .DEMUX_ADD_04(DEMUX_ADD_04), .DEMUX_ADD_05(DEMUX_ADD_05), .DEMUX_ADD_06(DEMUX_ADD_06), .DEMUX_ADD_07(DEMUX_ADD_07),
-        .DEMUX_ADD_08(DEMUX_ADD_08), .DEMUX_ADD_09(DEMUX_ADD_09), .DEMUX_ADD_10(DEMUX_ADD_10), .DEMUX_ADD_11(DEMUX_ADD_11),
-        .DEMUX_ADD_12(DEMUX_ADD_12), .DEMUX_ADD_13(DEMUX_ADD_13), .DEMUX_ADD_14(DEMUX_ADD_14), .DEMUX_ADD_15(DEMUX_ADD_15),
-        .RWL_DEC_ADD_00(RWL_DEC_ADD_00), .RWL_DEC_ADD_01(RWL_DEC_ADD_01), .RWL_DEC_ADD_02(RWL_DEC_ADD_02), .RWL_DEC_ADD_03(RWL_DEC_ADD_03),
-        .RWL_DEC_ADD_04(RWL_DEC_ADD_04), .RWL_DEC_ADD_05(RWL_DEC_ADD_05), .RWL_DEC_ADD_06(RWL_DEC_ADD_06), .RWL_DEC_ADD_07(RWL_DEC_ADD_07),
-        .RWL_DEC_ADD_08(RWL_DEC_ADD_08), .RWL_DEC_ADD_09(RWL_DEC_ADD_09), .RWL_DEC_ADD_10(RWL_DEC_ADD_10), .RWL_DEC_ADD_11(RWL_DEC_ADD_11),
-        .RWL_DEC_ADD_12(RWL_DEC_ADD_12), .RWL_DEC_ADD_13(RWL_DEC_ADD_13), .RWL_DEC_ADD_14(RWL_DEC_ADD_14), .RWL_DEC_ADD_15(RWL_DEC_ADD_15),
+        .DEMUX_ADD_00(DEMUX_ADD[0]), .DEMUX_ADD_01(DEMUX_ADD[1]), .DEMUX_ADD_02(DEMUX_ADD[2]), .DEMUX_ADD_03(DEMUX_ADD[3]),
+        .DEMUX_ADD_04(DEMUX_ADD[4]), .DEMUX_ADD_05(DEMUX_ADD[5]), .DEMUX_ADD_06(DEMUX_ADD[6]), .DEMUX_ADD_07(DEMUX_ADD[7]),
+        .DEMUX_ADD_08(DEMUX_ADD[8]), .DEMUX_ADD_09(DEMUX_ADD[9]), .DEMUX_ADD_10(DEMUX_ADD[10]), .DEMUX_ADD_11(DEMUX_ADD[11]),
+        .DEMUX_ADD_12(DEMUX_ADD[12]), .DEMUX_ADD_13(DEMUX_ADD[13]), .DEMUX_ADD_14(DEMUX_ADD[14]), .DEMUX_ADD_15(DEMUX_ADD[15]),
+        .RWL_DEC_ADD_00(RWL_DEC_ADD[ 0]), .RWL_DEC_ADD_01(RWL_DEC_ADD[ 1]), .RWL_DEC_ADD_02(RWL_DEC_ADD[ 2]), .RWL_DEC_ADD_03(RWL_DEC_ADD[ 3]),
+        .RWL_DEC_ADD_04(RWL_DEC_ADD[ 4]), .RWL_DEC_ADD_05(RWL_DEC_ADD[ 5]), .RWL_DEC_ADD_06(RWL_DEC_ADD[ 6]), .RWL_DEC_ADD_07(RWL_DEC_ADD[ 7]),
+        .RWL_DEC_ADD_08(RWL_DEC_ADD[ 8]), .RWL_DEC_ADD_09(RWL_DEC_ADD[ 9]), .RWL_DEC_ADD_10(RWL_DEC_ADD[10]), .RWL_DEC_ADD_11(RWL_DEC_ADD[11]),
+        .RWL_DEC_ADD_12(RWL_DEC_ADD[12]), .RWL_DEC_ADD_13(RWL_DEC_ADD[13]), .RWL_DEC_ADD_14(RWL_DEC_ADD[14]), .RWL_DEC_ADD_15(RWL_DEC_ADD[15]),
         .IN(IN)
     );
 
@@ -92,23 +87,25 @@ module StdAES_Optimized_tb;
     end
 
     // Drive RIO with AddRoundKey and then S-box result (1-cycle RAM delay)
+    integer i;
     integer j;
+
     always @(posedge CLK) begin
         if (!RSTn) begin
             cycle_cnt   <= 0;
             lookup_phase <= 0;
             round_cnt   <= 0;
         end else if (cycle_cnt < 8) begin
-            RIO[2*cycle_cnt]   <= IN[15:8] ^ key_byte(2*cycle_cnt);
-            RIO[2*cycle_cnt+1] <= IN[7:0]  ^ key_byte(2*cycle_cnt+1);
-            addr_reg[2*cycle_cnt]   <= IN[15:8] ^ key_byte(2*cycle_cnt);
-            addr_reg[2*cycle_cnt+1] <= IN[7:0]  ^ key_byte(2*cycle_cnt+1);
+            for (i=0;i<8;i=i+1) begin
+                RIO[2*i]   <= IN[i+8] ^ {key_byte(0)[i],key_byte(2)[i],key_byte(4)[i],key_byte(6)[i],key_byte(8)[i],key_byte(10)[i],key_byte(12)[i],key_byte(14)[i]};
+                RIO[2*i+1] <= IN[i]   ^ {key_byte(1)[i],key_byte(3)[i],key_byte(5)[i],key_byte(7)[i],key_byte(9)[i],key_byte(11)[i],key_byte(13)[i],key_byte(15)[i]};
+            end
             cycle_cnt <= cycle_cnt + 1;
             if (cycle_cnt == 7)
                 lookup_phase <= 1;
         end else if (lookup_phase) begin
             for (j = 0; j < 16; j = j + 1)
-                RIO[j] <= sbox_mem[addr_reg[j]];
+                RIO[j] <= sbox_mem[{DEMUX_ADD[j],RWL_DEC_ADD[j]}];
             lookup_phase <= 0;
             cycle_cnt   <= 0;
             if (round_cnt < 10)
@@ -123,4 +120,3 @@ module StdAES_Optimized_tb;
         $finish;
     end
 endmodule
-
