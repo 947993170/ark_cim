@@ -1,8 +1,8 @@
 //================================================ AES_Core
-module StdAES_Optimized_AES_Core (din, dout, kin, sel);
+module StdAES_Optimized_AES_Core (din, dout, sel);
 
    //------------------------------------------------
-   input  [127:0] din, kin;
+   input  [127:0] din;
    input  [  1:0] sel;
    output [127:0] dout;
    
