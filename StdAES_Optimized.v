@@ -6,7 +6,6 @@ module StdAES_Optimized
     input  wire         RSTn,
     input  wire         EN,
     input  wire [127:0] Din,
-    input  wire [127:0] Kin,     // 补充：原代码内部使用了 Kin
     input  wire         KDrdy,
 
     input  wire [7:0]   RIO_00,
@@ -74,7 +73,7 @@ module StdAES_Optimized
     // -------------------------------------------------
     wire        rst = ~RSTn;
 
-    reg [127:0] dat, rkey;
+    reg [127:0] dat;
     reg [127:0] dat_dff;
     reg [3:0]   dcnt;
     reg [1:0]   sel;
@@ -113,7 +112,6 @@ module StdAES_Optimized
     StdAES_Optimized_AES_Core aes_core (
         .din ( (sel == 2'd0) ? dat_dff : dat ),
         .dout(dat_next),
-        .kin ( rkey ),
         .sel ( sel )
     );
 
@@ -159,15 +157,6 @@ module StdAES_Optimized
     always @(posedge CLK) begin
         if (EN)
             dat_dff <= dat;
-    end
-
-    // rkey 只在开始时加载
-    always @(posedge CLK or posedge rst) begin
-        if (rst) begin
-            rkey <= 128'h0;
-        end else if (EN && KDrdy) begin
-            rkey <= Kin;
-        end
     end
 
     assign Dout = dat_next;
