@@ -97,8 +97,12 @@ module StdAES_Optimized_tb;
             round_cnt   <= 0;
         end else if (cycle_cnt < 8) begin
             for (i=0;i<8;i=i+1) begin
-                RIO[2*i]   <= IN[i+8] ^ {key_byte(0)[i],key_byte(2)[i],key_byte(4)[i],key_byte(6)[i],key_byte(8)[i],key_byte(10)[i],key_byte(12)[i],key_byte(14)[i]};
-                RIO[2*i+1] <= IN[i]   ^ {key_byte(1)[i],key_byte(3)[i],key_byte(5)[i],key_byte(7)[i],key_byte(9)[i],key_byte(11)[i],key_byte(13)[i],key_byte(15)[i]};
+                RIO[2*i]   <= { (key_byte(0))[i], (key_byte(2))[i], (key_byte(4))[i], (key_byte(6))[i],
+                                (key_byte(8))[i], (key_byte(10))[i], (key_byte(12))[i], (key_byte(14))[i] }
+                              ^ {8{IN[i+8]}};
+                RIO[2*i+1] <= { (key_byte(1))[i], (key_byte(3))[i], (key_byte(5))[i], (key_byte(7))[i],
+                                (key_byte(9))[i], (key_byte(11))[i], (key_byte(13))[i], (key_byte(15))[i] }
+                              ^ {8{IN[i]}};
             end
             cycle_cnt <= cycle_cnt + 1;
             if (cycle_cnt == 7)
