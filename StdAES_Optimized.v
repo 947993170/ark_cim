@@ -77,9 +77,7 @@ module StdAES_Optimized
     reg [127:0] dat, rkey;
     reg [127:0] dat_dff;
     reg [3:0]   dcnt;
-    reg [7:0]   rcon;
     reg [1:0]   sel;
-    reg [3:0]   rcnt;
 
     // sbox result wires (保持为 wire，下面用寄存器回连)
     wire [7:0] sbox_result_00, sbox_result_01, sbox_result_02, sbox_result_03;
@@ -110,8 +108,8 @@ module StdAES_Optimized
         end
     end
 
-    // AES 核与 KeyExpansion（保持原有接口）
-    wire [127:0] dat_next, rkey_next;
+    // AES 核
+    wire [127:0] dat_next;
     StdAES_Optimized_AES_Core aes_core (
         .din ( (sel == 2'd0) ? dat_dff : dat ),
         .dout(dat_next),
@@ -119,41 +117,36 @@ module StdAES_Optimized
         .sel ( sel )
     );
 
-    StdAES_Optimized_KeyExpantion keyexpantion (
-        .kin ( rkey ),
-        .kout( rkey_next ),
-        .rcon( rcon )
-    );
-
-    // 轮次与 sel
+    // 轮次计数与 sel 控制
     always @(posedge CLK or posedge rst) begin
-        if (rst)
-            dcnt <= 4'hf;
-        else if (EN) begin
-            if (KDrdy)         dcnt <= 4'd10;
-            else if (dcnt < 12) dcnt <= dcnt - 4'd1;
-        end
-    end
-
-    always @(posedge CLK or posedge rst) begin
-        if (rst)
-            sel <= 2'd0;
-        else if (EN) begin
-            if (KDrdy)         sel <= 2'd0; // first
-            else if (dcnt == 1) sel <= 2'd2; // last
-            else                sel <= 2'd1; // middle
-        end
-    end
-
-    // dat & dat_dff（保持原有，使用 sbox_result_*）
-    always @(*) begin
         if (rst) begin
-            dat = 128'h5555_5555_5555_5555_5555_5555_5555_5555;
+            dcnt <= 4'd0;
+            sel  <= 2'd0;
         end else if (EN) begin
             if (KDrdy) begin
-                dat = Din;
-            end else if (dcnt < 11) begin
-                dat = {
+                dcnt <= 4'd10;
+                sel  <= 2'd0;
+            end else if (state_q == ST_LOOKUP) begin
+                if (grp_idx_q == 4'd0) begin
+                    sel <= 2'd1;
+                end else begin
+                    if (dcnt > 0)
+                        dcnt <= dcnt - 4'd1;
+                    sel <= (dcnt == 4'd2) ? 2'd2 : 2'd1;
+                end
+            end
+        end
+    end
+
+    // dat 在 ST_LOOKUP 时更新，dat_dff 延迟一拍
+    always @(posedge CLK or posedge rst) begin
+        if (rst) begin
+            dat <= 128'h5555_5555_5555_5555_5555_5555_5555_5555;
+        end else if (EN) begin
+            if (KDrdy) begin
+                dat <= Din;
+            end else if (state_q == ST_LOOKUP) begin
+                dat <= {
                     sbox_result_15, sbox_result_14, sbox_result_13, sbox_result_12,
                     sbox_result_11, sbox_result_10, sbox_result_09, sbox_result_08,
                     sbox_result_07, sbox_result_06, sbox_result_05, sbox_result_04,
@@ -164,17 +157,16 @@ module StdAES_Optimized
     end
 
     always @(posedge CLK) begin
-        dat_dff <= dat;
+        if (EN)
+            dat_dff <= dat;
     end
 
-    // rkey（保持原有）
-    always @(posedge CLK) begin
-        if (EN) begin
-            if (KDrdy) begin
-                rkey <= Kin;
-            end else if ((dcnt < 11) && (dcnt != 0)) begin
-                rkey <= rkey_next;
-            end
+    // rkey 只在开始时加载
+    always @(posedge CLK or posedge rst) begin
+        if (rst) begin
+            rkey <= 128'h0;
+        end else if (EN && KDrdy) begin
+            rkey <= Kin;
         end
     end
 
