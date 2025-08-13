@@ -48,7 +48,7 @@ module StdAES_Optimized_tb;
     // S-box table stored in RAM
     reg [7:0] sbox_mem [0:255];
     initial begin
-        $readmemh("sbox.mem", sbox_mem);
+        $readmemh("../../../../ark_cim.srcs/sim_1/new/sbox.mem", sbox_mem);
     end
 
     // Round keys and address storage
