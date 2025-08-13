@@ -44,7 +44,5 @@ module StdAES_Optimized_AES_Core (din, dout, kin, sel);
    assign sk2 = (sel == 2'b00) ? din[ 63:32] : (sel == 2'b10) ? sr2 : sc2 ;
    assign sk3 = (sel == 2'b00) ? din[ 31: 0] : (sel == 2'b10) ? sr3 : sc3 ;
 
-   // state -> dout
-   assign dout = kin ^ {sk0, sk1, sk2, sk3};
 endmodule // AES_Core
 
