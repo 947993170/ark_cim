@@ -17,7 +17,8 @@ module StdAES_Optimized
     input  wire [7:0]   RIO_05,
     input  wire [7:0]   RIO_06,
     input  wire [7:0]   RIO_07,
-    // 说明：若你有 RIO_08/09 端口，请补充到端口列表并在下方连线
+    input  wire [7:0]   RIO_08,
+    input  wire [7:0]   RIO_09,
     input  wire [7:0]   RIO_10,
     input  wire [7:0]   RIO_11,
     input  wire [7:0]   RIO_12,
@@ -192,8 +193,8 @@ module StdAES_Optimized
     wire [7:0] rio_05 = RIO_05;
     wire [7:0] rio_06 = RIO_06;
     wire [7:0] rio_07 = RIO_07;
-    wire [7:0] rio_08 = 8'h00;   // TODO: 若存在 RIO_08，请改为 RIO_08
-    wire [7:0] rio_09 = 8'h00;   // TODO: 若存在 RIO_09，请改为 RIO_09
+    wire [7:0] rio_08 = RIO_08;   // TODO: 若存在 RIO_08，请改为 RIO_08
+    wire [7:0] rio_09 = RIO_09;   // TODO: 若存在 RIO_09，请改为 RIO_09
     wire [7:0] rio_10 = RIO_10;
     wire [7:0] rio_11 = RIO_11;
     wire [7:0] rio_12 = RIO_12;
