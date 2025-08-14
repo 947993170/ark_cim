@@ -55,10 +55,11 @@ module StdAES_Optimized_tb;
     integer i;
 
     // Select a byte from the current round key
-    function [7:0] key_byte;
-        input integer idx;
+    function key_bit;
+        input integer byte_idx;
+        input integer bit_idx;
         begin
-            key_byte = round_keys[round_cnt][127 - idx*8 -: 8];
+            key_bit = round_keys[round_cnt][127 - byte_idx*8 - bit_idx];
         end
     endfunction
 
@@ -87,7 +88,7 @@ module StdAES_Optimized_tb;
     end
 
     // Drive RIO with AddRoundKey and then S-box result (1-cycle RAM delay)
-    integer i;
+    integer k;
     integer j;
 
     always @(posedge CLK) begin
@@ -96,13 +97,31 @@ module StdAES_Optimized_tb;
             lookup_phase <= 0;
             round_cnt   <= 0;
         end else if (cycle_cnt < 8) begin
-            for (i=0;i<8;i=i+1) begin
-                RIO[2*i]   <= { key_byte(0)[i],  key_byte(2)[i],  key_byte(4)[i],  key_byte(6)[i],
-                                key_byte(8)[i],  key_byte(10)[i], key_byte(12)[i], key_byte(14)[i] }
-                              ^ {8{IN[i+8]}};
-                RIO[2*i+1] <= { key_byte(1)[i],  key_byte(3)[i],  key_byte(5)[i],  key_byte(7)[i],
-                                key_byte(9)[i],  key_byte(11)[i], key_byte(13)[i], key_byte(15)[i] }
-                              ^ {8{IN[i]}};
+            for (k=0;k<8;k=k+1) begin
+                RIO[k]   <= { key_bit( 0,7-k),  
+                                key_bit( 2,7-k),  
+                                key_bit( 4,7-k),  
+                                key_bit( 6,7-k),
+                                key_bit( 8,7-k),  
+                                key_bit(10,7-k), 
+                                key_bit(12,7-k), 
+                                key_bit(14,7-k) }
+                            ^ {8{IN[k+8]}};  
+                            //^ {8{IN[k+8]}};                
+                            //^ {8{IN[k]}};                
+                            //^ {8{IN[7-k]}};                                                          
+                RIO[k+8] <= { key_bit( 1,7-k),  
+                                key_bit( 3,7-k),  
+                                key_bit( 5,7-k),  
+                                key_bit( 7,7-k),
+                                key_bit( 9,7-k),  
+                                key_bit(11,7-k), 
+                                key_bit(13,7-k), 
+                                key_bit(15,7-k) }
+                            ^ {8{IN[k]}};
+                            //^ {8{IN[k]}};
+                            //^ {8{IN[k+8]}};
+                            //^ {8{IN[7-k+8]}};
             end
             cycle_cnt <= cycle_cnt + 1;
             if (cycle_cnt == 7)
