@@ -78,14 +78,14 @@ module StdAES_Optimized
     reg [3:0]   dcnt;
     reg [1:0]   sel;
 
-    // sbox result wires (保持为 wire，下面用寄存器回连)
+    // sbox result wires (保持�? wire，下面用寄存器回�?)
     wire [7:0] sbox_result_00, sbox_result_01, sbox_result_02, sbox_result_03;
     wire [7:0] sbox_result_04, sbox_result_05, sbox_result_06, sbox_result_07;
     wire [7:0] sbox_result_08, sbox_result_09, sbox_result_10, sbox_result_11;
     wire [7:0] sbox_result_12, sbox_result_13, sbox_result_14, sbox_result_15;
 
     // -------------------------------------------------
-    // 原有 Dvld/Kvld/BSY/counter/sel 逻辑（未改动）
+    // 原有 Dvld/Kvld/BSY/counter/sel 逻辑（未改动�?
     // -------------------------------------------------
     always @(posedge CLK or posedge rst) begin
         if (rst)       Dvld <= 1'b0;
@@ -107,7 +107,7 @@ module StdAES_Optimized
         end
     end
 
-    // AES 核
+    // AES �?
     wire [127:0] dat_next;
     StdAES_Optimized_AES_Core aes_core (
         .din ( (sel == 2'd0) ? dat_dff : dat ),
@@ -115,7 +115,7 @@ module StdAES_Optimized
         .sel ( sel )
     );
 
-    // 轮次计数与 sel 控制
+    // 轮次计数�? sel 控制
     always @(posedge CLK or posedge rst) begin
         if (rst) begin
             dcnt <= 4'd0;
@@ -136,7 +136,7 @@ module StdAES_Optimized
         end
     end
 
-    // dat 在 ST_LOOKUP 时更新，dat_dff 延迟一拍
+    // dat �? ST_LOOKUP 时更新，dat_dff 延迟�?�?
     always @(posedge CLK or posedge rst) begin
         if (rst) begin
             dat <= 128'h5555_5555_5555_5555_5555_5555_5555_5555;
@@ -162,10 +162,10 @@ module StdAES_Optimized
     assign Dout = dat_next;
 
     // =================================================
-    // 下面是：三段式状态机（读→查）整合
+    // 下面是：三段式状态机（读→查）整�?
     // =================================================
 
-    // 将 RIO 规范成顺序信号（若你有 RIO_08/09，请映射替换掉 8'h00）
+    // �? RIO 规范成顺序信号（若你�? RIO_08/09，请映射替换�? 8'h00�?
     wire [7:0] rio_00 = RIO_00;
     wire [7:0] rio_01 = RIO_01;
     wire [7:0] rio_02 = RIO_02;
@@ -174,8 +174,8 @@ module StdAES_Optimized
     wire [7:0] rio_05 = RIO_05;
     wire [7:0] rio_06 = RIO_06;
     wire [7:0] rio_07 = RIO_07;
-    wire [7:0] rio_08 = RIO_08;   // TODO: 若存在 RIO_08，请改为 RIO_08
-    wire [7:0] rio_09 = RIO_09;   // TODO: 若存在 RIO_09，请改为 RIO_09
+    wire [7:0] rio_08 = RIO_08;   // TODO: 若存�? RIO_08，请改为 RIO_08
+    wire [7:0] rio_09 = RIO_09;   // TODO: 若存�? RIO_09，请改为 RIO_09
     wire [7:0] rio_10 = RIO_10;
     wire [7:0] rio_11 = RIO_11;
     wire [7:0] rio_12 = RIO_12;
@@ -187,7 +187,7 @@ module StdAES_Optimized
     localparam integer NUM_GROUPS   = 11;
     localparam         IN_MSB_FIRST = 1'b1;
 
-    // 状态编码
+    // 状�?�编�?
     localparam [1:0] ST_IDLE   = 2'd0;
     localparam [1:0] ST_READ   = 2'd1;  // 8 cycles
     localparam [1:0] ST_LOOKUP = 2'd2;  // 1 cycle
@@ -197,7 +197,7 @@ module StdAES_Optimized
     reg [3:0] grp_idx_q, grp_idx_d;   // 0..10
     reg [3:0] read_cnt_q, read_cnt_d; // 0..7
 
-    // ark 寄存器：8 拍采集 bit7..0
+    // ark 寄存器：8 拍采�? bit7..0
     reg [7:0] ark_q_00, ark_q_01, ark_q_02, ark_q_03;
     reg [7:0] ark_q_04, ark_q_05, ark_q_06, ark_q_07;
     reg [7:0] ark_q_08, ark_q_09, ark_q_10, ark_q_11;
@@ -223,7 +223,7 @@ module StdAES_Optimized
     // IN 寄存
     reg [15:0] IN_q;
 
-    // group 配置函数（无 initial）
+    // group 配置函数（无 initial�?
     function [2:0] get_demux_code;
         input [3:0] g;
     begin
@@ -267,7 +267,7 @@ module StdAES_Optimized
 
     wire [127:0] src128 = use_datnext(grp_idx_q) ? dat_next : Din;
 
-    // 状态寄存
+    // 状�?�寄�?
     always @(posedge CLK or posedge rst) begin
         if (rst) begin
             state_q    <= ST_IDLE;
@@ -280,7 +280,7 @@ module StdAES_Optimized
         end
     end
 
-    // 次态组合
+    // 次�?�组�?
     always @* begin
         state_d    = state_q;
         grp_idx_d  = grp_idx_q;
@@ -321,7 +321,7 @@ module StdAES_Optimized
         endcase
     end
 
-    // 时序输出与数据路径
+    // 时序输出与数据路�?
     always @(posedge CLK or posedge rst) begin
         if (rst) begin
             IN_q <= 16'h0000;
@@ -354,39 +354,9 @@ module StdAES_Optimized
             sbox_q_12 <= 8'h00; sbox_q_13 <= 8'h00; sbox_q_14 <= 8'h00; sbox_q_15 <= 8'h00;
 
         end else if (EN) begin
-            // 保持（避免隐式锁存）
-            IN_q <= IN_q;
-
-            demux_q_00 <= demux_q_00; rwl_q_00 <= rwl_q_00;
-            demux_q_01 <= demux_q_01; rwl_q_01 <= rwl_q_01;
-            demux_q_02 <= demux_q_02; rwl_q_02 <= rwl_q_02;
-            demux_q_03 <= demux_q_03; rwl_q_03 <= rwl_q_03;
-            demux_q_04 <= demux_q_04; rwl_q_04 <= rwl_q_04;
-            demux_q_05 <= demux_q_05; rwl_q_05 <= rwl_q_05;
-            demux_q_06 <= demux_q_06; rwl_q_06 <= rwl_q_06;
-            demux_q_07 <= demux_q_07; rwl_q_07 <= rwl_q_07;
-            demux_q_08 <= demux_q_08; rwl_q_08 <= rwl_q_08;
-            demux_q_09 <= demux_q_09; rwl_q_09 <= rwl_q_09;
-            demux_q_10 <= demux_q_10; rwl_q_10 <= rwl_q_10;
-            demux_q_11 <= demux_q_11; rwl_q_11 <= rwl_q_11;
-            demux_q_12 <= demux_q_12; rwl_q_12 <= rwl_q_12;
-            demux_q_13 <= demux_q_13; rwl_q_13 <= rwl_q_13;
-            demux_q_14 <= demux_q_14; rwl_q_14 <= rwl_q_14;
-            demux_q_15 <= demux_q_15; rwl_q_15 <= rwl_q_15;
-
-            ark_q_00 <= ark_q_00; ark_q_01 <= ark_q_01; ark_q_02 <= ark_q_02; ark_q_03 <= ark_q_03;
-            ark_q_04 <= ark_q_04; ark_q_05 <= ark_q_05; ark_q_06 <= ark_q_06; ark_q_07 <= ark_q_07;
-            ark_q_08 <= ark_q_08; ark_q_09 <= ark_q_09; ark_q_10 <= ark_q_10; ark_q_11 <= ark_q_11;
-            ark_q_12 <= ark_q_12; ark_q_13 <= ark_q_13; ark_q_14 <= ark_q_14; ark_q_15 <= ark_q_15;
-
-            sbox_q_00 <= sbox_q_00; sbox_q_01 <= sbox_q_01; sbox_q_02 <= sbox_q_02; sbox_q_03 <= sbox_q_03;
-            sbox_q_04 <= sbox_q_04; sbox_q_05 <= sbox_q_05; sbox_q_06 <= sbox_q_06; sbox_q_07 <= sbox_q_07;
-            sbox_q_08 <= sbox_q_08; sbox_q_09 <= sbox_q_09; sbox_q_10 <= sbox_q_10; sbox_q_11 <= sbox_q_11;
-            sbox_q_12 <= sbox_q_12; sbox_q_13 <= sbox_q_13; sbox_q_14 <= sbox_q_14; sbox_q_15 <= sbox_q_15;
-
             case (state_q)
                 ST_READ: begin
-                    // 组固定地址
+                    // 组固定地�?
                     demux_q_00 <= get_demux_code(grp_idx_q); rwl_q_00 <= get_row_code(grp_idx_q);
                     demux_q_01 <= get_demux_code(grp_idx_q); rwl_q_01 <= get_row_code(grp_idx_q);
                     demux_q_02 <= get_demux_code(grp_idx_q); rwl_q_02 <= get_row_code(grp_idx_q);
@@ -404,11 +374,12 @@ module StdAES_Optimized
                     demux_q_14 <= get_demux_code(grp_idx_q); rwl_q_14 <= get_row_code(grp_idx_q);
                     demux_q_15 <= get_demux_code(grp_idx_q); rwl_q_15 <= get_row_code(grp_idx_q);
 
-                    // IN 两字节
+                    // IN 两字�?
                     IN_q <= pick_2b(src128, read_cnt_q);
 
-                    // 采样当前位面（bit = 7-read_cnt_q）
-                    case (read_cnt_q)
+                    // 采样当前位面（bit = 7-read_cnt_q�?
+                    //case (read_cnt_q)
+                    case (read_cnt_q)                   
                         4'd0: begin
                             ark_q_00 <= {rio_07[7],rio_06[7],rio_05[7],rio_04[7],rio_03[7],rio_02[7],rio_01[7],rio_00[7]};
                             ark_q_01 <= {rio_15[7],rio_14[7],rio_13[7],rio_12[7],rio_11[7],rio_10[7],rio_09[7],rio_08[7]};
@@ -475,6 +446,36 @@ module StdAES_Optimized
                     IN_q <= 16'h0000;
                 end
             endcase
+        end else begin
+            // 保持（避免隐式锁存）
+            IN_q <= IN_q;
+
+            demux_q_00 <= demux_q_00; rwl_q_00 <= rwl_q_00;
+            demux_q_01 <= demux_q_01; rwl_q_01 <= rwl_q_01;
+            demux_q_02 <= demux_q_02; rwl_q_02 <= rwl_q_02;
+            demux_q_03 <= demux_q_03; rwl_q_03 <= rwl_q_03;
+            demux_q_04 <= demux_q_04; rwl_q_04 <= rwl_q_04;
+            demux_q_05 <= demux_q_05; rwl_q_05 <= rwl_q_05;
+            demux_q_06 <= demux_q_06; rwl_q_06 <= rwl_q_06;
+            demux_q_07 <= demux_q_07; rwl_q_07 <= rwl_q_07;
+            demux_q_08 <= demux_q_08; rwl_q_08 <= rwl_q_08;
+            demux_q_09 <= demux_q_09; rwl_q_09 <= rwl_q_09;
+            demux_q_10 <= demux_q_10; rwl_q_10 <= rwl_q_10;
+            demux_q_11 <= demux_q_11; rwl_q_11 <= rwl_q_11;
+            demux_q_12 <= demux_q_12; rwl_q_12 <= rwl_q_12;
+            demux_q_13 <= demux_q_13; rwl_q_13 <= rwl_q_13;
+            demux_q_14 <= demux_q_14; rwl_q_14 <= rwl_q_14;
+            demux_q_15 <= demux_q_15; rwl_q_15 <= rwl_q_15;
+
+            ark_q_00 <= ark_q_00; ark_q_01 <= ark_q_01; ark_q_02 <= ark_q_02; ark_q_03 <= ark_q_03;
+            ark_q_04 <= ark_q_04; ark_q_05 <= ark_q_05; ark_q_06 <= ark_q_06; ark_q_07 <= ark_q_07;
+            ark_q_08 <= ark_q_08; ark_q_09 <= ark_q_09; ark_q_10 <= ark_q_10; ark_q_11 <= ark_q_11;
+            ark_q_12 <= ark_q_12; ark_q_13 <= ark_q_13; ark_q_14 <= ark_q_14; ark_q_15 <= ark_q_15;
+
+            sbox_q_00 <= sbox_q_00; sbox_q_01 <= sbox_q_01; sbox_q_02 <= sbox_q_02; sbox_q_03 <= sbox_q_03;
+            sbox_q_04 <= sbox_q_04; sbox_q_05 <= sbox_q_05; sbox_q_06 <= sbox_q_06; sbox_q_07 <= sbox_q_07;
+            sbox_q_08 <= sbox_q_08; sbox_q_09 <= sbox_q_09; sbox_q_10 <= sbox_q_10; sbox_q_11 <= sbox_q_11;
+            sbox_q_12 <= sbox_q_12; sbox_q_13 <= sbox_q_13; sbox_q_14 <= sbox_q_14; sbox_q_15 <= sbox_q_15;
         end
     end
 
@@ -498,7 +499,7 @@ module StdAES_Optimized
     assign DEMUX_ADD_14 = demux_q_14; assign RWL_DEC_ADD_14 = rwl_q_14;
     assign DEMUX_ADD_15 = demux_q_15; assign RWL_DEC_ADD_15 = rwl_q_15;
 
-    // 用寄存器回连到原 wire sbox_result_*（供原有 dat 组合逻辑使用）
+    // 用寄存器回连到原 wire sbox_result_*（供原有 dat 组合逻辑使用�?
     assign sbox_result_00 = sbox_q_00;
     assign sbox_result_01 = sbox_q_01;
     assign sbox_result_02 = sbox_q_02;
