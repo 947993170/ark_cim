@@ -92,48 +92,62 @@ module StdAES_Optimized_tb;
     integer j;
 
     always @(posedge CLK) begin
-        if (!RSTn) begin
-            cycle_cnt   <= 0;
-            lookup_phase <= 0;
-            round_cnt   <= 0;
-        end else if (cycle_cnt < 8) begin
+        if (cycle_cnt < 8) begin
             for (k=0;k<8;k=k+1) begin
-                RIO[k]   <= { key_bit( 0,7-k),  
-                                key_bit( 2,7-k),  
-                                key_bit( 4,7-k),  
+                RIO[k]   <= { key_bit( 0,7-k),
+                                key_bit( 2,7-k),
+                                key_bit( 4,7-k),
                                 key_bit( 6,7-k),
-                                key_bit( 8,7-k),  
-                                key_bit(10,7-k), 
-                                key_bit(12,7-k), 
+                                key_bit( 8,7-k),
+                                key_bit(10,7-k),
+                                key_bit(12,7-k),
                                 key_bit(14,7-k) }
-                            ^ {8{IN[k+8]}};  
-                            //^ {8{IN[k+8]}};                
-                            //^ {8{IN[k]}};                
-                            //^ {8{IN[7-k]}};                                                          
-                RIO[k+8] <= { key_bit( 1,7-k),  
-                                key_bit( 3,7-k),  
-                                key_bit( 5,7-k),  
+                            ^ {8{IN[k+8]}};
+                            //^ {8{IN[k+8]}};
+                            //^ {8{IN[k]}};
+                            //^ {8{IN[7-k]}};
+                RIO[k+8] <= { key_bit( 1,7-k),
+                                key_bit( 3,7-k),
+                                key_bit( 5,7-k),
                                 key_bit( 7,7-k),
-                                key_bit( 9,7-k),  
-                                key_bit(11,7-k), 
-                                key_bit(13,7-k), 
+                                key_bit( 9,7-k),
+                                key_bit(11,7-k),
+                                key_bit(13,7-k),
                                 key_bit(15,7-k) }
                             ^ {8{IN[k]}};
                             //^ {8{IN[k]}};
                             //^ {8{IN[k+8]}};
                             //^ {8{IN[7-k+8]}};
             end
-            cycle_cnt <= cycle_cnt + 1;
-            if (cycle_cnt == 7)
-                lookup_phase <= 1;
         end else if (lookup_phase) begin
             for (j = 0; j < 16; j = j + 1)
                 RIO[j] <= sbox_mem[{DEMUX_ADD[j],RWL_DEC_ADD[j]}];
-            lookup_phase <= 0;
-            cycle_cnt   <= 0;
-            if (round_cnt < 10)
-                round_cnt <= round_cnt + 1;
         end
+    end
+
+    always @(posedge CLK) begin
+        if (!RSTn)
+            cycle_cnt <= 0;
+        else if (cycle_cnt < 8)
+            cycle_cnt <= cycle_cnt + 1;
+        else if (lookup_phase)
+            cycle_cnt <= 0;
+    end
+
+    always @(posedge CLK) begin
+        if (!RSTn)
+            lookup_phase <= 0;
+        else if (cycle_cnt < 8 && cycle_cnt == 7)
+            lookup_phase <= 1;
+        else if (lookup_phase)
+            lookup_phase <= 0;
+    end
+
+    always @(posedge CLK) begin
+        if (!RSTn)
+            round_cnt <= 0;
+        else if (lookup_phase && round_cnt < 10)
+            round_cnt <= round_cnt + 1;
     end
 
     // Simple runtime control: wait for output valid
