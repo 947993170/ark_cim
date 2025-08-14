@@ -124,8 +124,8 @@ module StdAES_Optimized
             if (KDrdy) begin
                 dcnt <= 4'd10;
                 sel  <= 2'd0;
-            end else if (state_q == ST_LOOKUP) begin
-                if (grp_idx_q == 4'd0) begin
+            end else if (current_state == ST_LOOKUP) begin
+                if (grp_idx == 4'd0) begin
                     sel <= 2'd1;
                 end else begin
                     if (dcnt > 0)
@@ -143,7 +143,7 @@ module StdAES_Optimized
         end else if (EN) begin
             if (KDrdy) begin
                 dat <= Din;
-            end else if (state_q == ST_LOOKUP) begin
+            end else if (current_state == ST_LOOKUP) begin
                 dat <= {
                     sbox_result_15, sbox_result_14, sbox_result_13, sbox_result_12,
                     sbox_result_11, sbox_result_10, sbox_result_09, sbox_result_08,
@@ -193,9 +193,9 @@ module StdAES_Optimized
     localparam [1:0] ST_LOOKUP = 2'd2;  // 1 cycle
     localparam [1:0] ST_OUT    = 2'd3;  // 1 cycle
 
-    reg [1:0] state_q, state_d;
-    reg [3:0] grp_idx_q, grp_idx_d;   // 0..10
-    reg [3:0] read_cnt_q, read_cnt_d; // 0..7
+    reg [1:0] current_state, next_state;
+    reg [3:0] grp_idx;    // 0..10
+    reg [3:0] read_cnt;   // 0..7
 
     // ark 寄存器：8 拍采�? bit7..0
     reg [7:0] ark_q_00, ark_q_01, ark_q_02, ark_q_03;
@@ -265,59 +265,42 @@ module StdAES_Optimized
     end
     endfunction
 
-    wire [127:0] src128 = use_datnext(grp_idx_q) ? dat_next : Din;
+    wire [127:0] src128 = use_datnext(grp_idx) ? dat_next : Din;
 
-    // 状�?�寄�?
+    // 状态寄存及计数
     always @(posedge CLK or posedge rst) begin
         if (rst) begin
-            state_q    <= ST_IDLE;
-            grp_idx_q  <= 4'd0;
-            read_cnt_q <= 4'd0;
+            current_state <= ST_IDLE;
+            grp_idx  <= 4'd0;
+            read_cnt <= 4'd0;
         end else if (EN) begin
-            state_q    <= state_d;
-            grp_idx_q  <= grp_idx_d;
-            read_cnt_q <= read_cnt_d;
+            current_state <= next_state;
+            case (current_state)
+                ST_IDLE: begin
+                    grp_idx  <= 4'd0;
+                    read_cnt <= 4'd0;
+                end
+                ST_READ: begin
+                    read_cnt <= (read_cnt == 4'd7) ? 4'd0 : read_cnt + 4'd1;
+                end
+                ST_LOOKUP: begin
+                    if (grp_idx < 4'd10)
+                        grp_idx <= grp_idx + 4'd1;
+                end
+                default: ;
+            endcase
         end
     end
 
-    // 次�?�组�?
-    always @* begin
-        state_d    = state_q;
-        grp_idx_d  = grp_idx_q;
-        read_cnt_d = read_cnt_q;
-
-        case (state_q)
-            ST_IDLE: begin
-                if (EN && KDrdy) begin
-                    grp_idx_d  = 4'd0;
-                    read_cnt_d = 4'd0;
-                    state_d    = ST_READ;
-                end
-            end
-
-            ST_READ: begin
-                if (read_cnt_q == 4'd7) begin
-                    read_cnt_d = 4'd0;
-                    state_d    = ST_LOOKUP;
-                end else begin
-                    read_cnt_d = read_cnt_q + 4'd1;
-                end
-            end
-
-            ST_LOOKUP: begin
-                if (grp_idx_q == 4'd10) begin
-                    state_d = ST_OUT;
-                end else begin
-                    grp_idx_d = grp_idx_q + 4'd1;
-                    state_d   = ST_READ;
-                end
-            end
-
-            ST_OUT: begin
-                state_d = ST_IDLE;
-            end
-
-            default: state_d = ST_IDLE;
+    // 次态逻辑
+    always @(*) begin
+        next_state = ST_IDLE;
+        case (current_state)
+            ST_IDLE   : next_state = (EN && KDrdy) ? ST_READ   : ST_IDLE;
+            ST_READ   : next_state = (read_cnt == 4'd7) ? ST_LOOKUP : ST_READ;
+            ST_LOOKUP : next_state = (grp_idx == 4'd10) ? ST_OUT    : ST_READ;
+            ST_OUT    : next_state = ST_IDLE;
+            default   : next_state = ST_IDLE;
         endcase
     end
 
@@ -354,32 +337,31 @@ module StdAES_Optimized
             sbox_q_12 <= 8'h00; sbox_q_13 <= 8'h00; sbox_q_14 <= 8'h00; sbox_q_15 <= 8'h00;
 
         end else if (EN) begin
-            case (state_q)
+            case (current_state)
                 ST_READ: begin
                     // 组固定地�?
-                    demux_q_00 <= get_demux_code(grp_idx_q); rwl_q_00 <= get_row_code(grp_idx_q);
-                    demux_q_01 <= get_demux_code(grp_idx_q); rwl_q_01 <= get_row_code(grp_idx_q);
-                    demux_q_02 <= get_demux_code(grp_idx_q); rwl_q_02 <= get_row_code(grp_idx_q);
-                    demux_q_03 <= get_demux_code(grp_idx_q); rwl_q_03 <= get_row_code(grp_idx_q);
-                    demux_q_04 <= get_demux_code(grp_idx_q); rwl_q_04 <= get_row_code(grp_idx_q);
-                    demux_q_05 <= get_demux_code(grp_idx_q); rwl_q_05 <= get_row_code(grp_idx_q);
-                    demux_q_06 <= get_demux_code(grp_idx_q); rwl_q_06 <= get_row_code(grp_idx_q);
-                    demux_q_07 <= get_demux_code(grp_idx_q); rwl_q_07 <= get_row_code(grp_idx_q);
-                    demux_q_08 <= get_demux_code(grp_idx_q); rwl_q_08 <= get_row_code(grp_idx_q);
-                    demux_q_09 <= get_demux_code(grp_idx_q); rwl_q_09 <= get_row_code(grp_idx_q);
-                    demux_q_10 <= get_demux_code(grp_idx_q); rwl_q_10 <= get_row_code(grp_idx_q);
-                    demux_q_11 <= get_demux_code(grp_idx_q); rwl_q_11 <= get_row_code(grp_idx_q);
-                    demux_q_12 <= get_demux_code(grp_idx_q); rwl_q_12 <= get_row_code(grp_idx_q);
-                    demux_q_13 <= get_demux_code(grp_idx_q); rwl_q_13 <= get_row_code(grp_idx_q);
-                    demux_q_14 <= get_demux_code(grp_idx_q); rwl_q_14 <= get_row_code(grp_idx_q);
-                    demux_q_15 <= get_demux_code(grp_idx_q); rwl_q_15 <= get_row_code(grp_idx_q);
+                    demux_q_00 <= get_demux_code(grp_idx); rwl_q_00 <= get_row_code(grp_idx);
+                    demux_q_01 <= get_demux_code(grp_idx); rwl_q_01 <= get_row_code(grp_idx);
+                    demux_q_02 <= get_demux_code(grp_idx); rwl_q_02 <= get_row_code(grp_idx);
+                    demux_q_03 <= get_demux_code(grp_idx); rwl_q_03 <= get_row_code(grp_idx);
+                    demux_q_04 <= get_demux_code(grp_idx); rwl_q_04 <= get_row_code(grp_idx);
+                    demux_q_05 <= get_demux_code(grp_idx); rwl_q_05 <= get_row_code(grp_idx);
+                    demux_q_06 <= get_demux_code(grp_idx); rwl_q_06 <= get_row_code(grp_idx);
+                    demux_q_07 <= get_demux_code(grp_idx); rwl_q_07 <= get_row_code(grp_idx);
+                    demux_q_08 <= get_demux_code(grp_idx); rwl_q_08 <= get_row_code(grp_idx);
+                    demux_q_09 <= get_demux_code(grp_idx); rwl_q_09 <= get_row_code(grp_idx);
+                    demux_q_10 <= get_demux_code(grp_idx); rwl_q_10 <= get_row_code(grp_idx);
+                    demux_q_11 <= get_demux_code(grp_idx); rwl_q_11 <= get_row_code(grp_idx);
+                    demux_q_12 <= get_demux_code(grp_idx); rwl_q_12 <= get_row_code(grp_idx);
+                    demux_q_13 <= get_demux_code(grp_idx); rwl_q_13 <= get_row_code(grp_idx);
+                    demux_q_14 <= get_demux_code(grp_idx); rwl_q_14 <= get_row_code(grp_idx);
+                    demux_q_15 <= get_demux_code(grp_idx); rwl_q_15 <= get_row_code(grp_idx);
 
                     // IN 两字�?
-                    IN_q <= pick_2b(src128, read_cnt_q);
+                    IN_q <= pick_2b(src128, read_cnt);
 
-                    // 采样当前位面（bit = 7-read_cnt_q�?
-                    //case (read_cnt_q)
-                    case (read_cnt_q)                   
+                    // 采样当前位面（bit = 7-read_cnt）
+                    case (read_cnt)
                         4'd0: begin
                             ark_q_00 <= {rio_07[7],rio_06[7],rio_05[7],rio_04[7],rio_03[7],rio_02[7],rio_01[7],rio_00[7]};
                             ark_q_01 <= {rio_15[7],rio_14[7],rio_13[7],rio_12[7],rio_11[7],rio_10[7],rio_09[7],rio_08[7]};
