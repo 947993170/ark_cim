@@ -51,6 +51,8 @@ module StdAES_Optimized_tb;
     reg [3:0]  round_cnt;
     reg [7:0]  addr_reg [0:15];
     reg [3:0]  cycle_cnt;
+    reg [3:0]  cycle_cnt_dff;
+
     reg        lookup_phase;
     integer i;
 
@@ -90,9 +92,21 @@ module StdAES_Optimized_tb;
     // Drive RIO with AddRoundKey and then S-box result (1-cycle RAM delay)
     integer k;
     integer j;
+	
+	wire unsigned [7:0] tmp [0:15];
+	genvar m;
+	generate for (m = 0; m < 16; m = m + 1)
+		assign tmp[m] = {DEMUX_ADD[m][2:0],RWL_DEC_ADD[m]};
+	endgenerate
 
     always @(posedge CLK) begin
-        if (cycle_cnt < 8) begin
+        if (!RSTn) begin    
+			for (j = 0; j < 16; j = j + 1)
+                RIO[j] <= 8'h0;
+		end else if (lookup_phase) begin
+            for (j = 0; j < 16; j = j + 1)
+                RIO[j] <= sbox_mem[tmp[j]];
+        end else if (BSY && (cycle_cnt < 8)) begin
             for (k=0;k<8;k=k+1) begin
                 RIO[k]   <= { key_bit( 0,7-k),
                                 key_bit( 2,7-k),
@@ -119,27 +133,31 @@ module StdAES_Optimized_tb;
                             //^ {8{IN[k+8]}};
                             //^ {8{IN[7-k+8]}};
             end
-        end else if (lookup_phase) begin
-            for (j = 0; j < 16; j = j + 1)
-                RIO[j] <= sbox_mem[{DEMUX_ADD[j],RWL_DEC_ADD[j]}];
-        end
+		end
     end
 
     always @(posedge CLK) begin
         if (!RSTn)
             cycle_cnt <= 0;
-        else if (cycle_cnt < 8)
+        else if (cycle_cnt < 8 && BSY)
             cycle_cnt <= cycle_cnt + 1;
-        else if (lookup_phase)
+        else
             cycle_cnt <= 0;
+    end
+	
+	always @(posedge CLK) begin
+        if (!RSTn)
+            cycle_cnt_dff <= 0;
+        else
+            cycle_cnt_dff <= cycle_cnt;
     end
 
     always @(posedge CLK) begin
         if (!RSTn)
             lookup_phase <= 0;
-        else if (cycle_cnt < 8 && cycle_cnt == 7)
+        else if (cycle_cnt == 8)
             lookup_phase <= 1;
-        else if (lookup_phase)
+        else
             lookup_phase <= 0;
     end
 
